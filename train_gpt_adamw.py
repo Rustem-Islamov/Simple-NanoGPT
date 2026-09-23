@@ -76,7 +76,6 @@ try:
     if master_process:
         print(f"Training DataLoader: total number of tokens: {train_loader.ntok_total} across {len(train_loader.files)} files")
         print(f"Validation DataLoader: total number of tokens: {val_loader.ntok_total} across {len(val_loader.files)} files")
-    x, y = train_loader.next_batch()
 
     num_vocab = 50304
     model = GPT(GPTConfig(vocab_size=num_vocab, n_layer=args.n_layer, n_head=args.n_head, n_embd=args.n_embd))
@@ -198,9 +197,10 @@ try:
         
     val_loader.reset()
     train_loader.reset()
+    x, y = train_loader.next_batch()
     train_iter_start = time.time()  # timer for training iterations only
 
-    for step in tqdm(range(1, args.num_iterations + 1)):
+    for step in tqdm(range(0, args.num_iterations + 1)):
         last_step = (step == args.num_iterations)
 
         # --------------- EVALUATION -----------------
