@@ -5,7 +5,7 @@ A minimal PyTorch setup for pretraining a NanoGPT-style model on
 It is intended for hyperparameter studies (learning rate, batch size, weight decay,
 betas, token budget). Runs are tracked with [Weights & Biases](https://wandb.ai).
 
-**Model:** 12 layers, 6 heads, 768-dim embeddings, RoPE, QK-norm, RMSNorm without
+**124M Model Configuration:** 12 layers, 6 heads, 768-dim embeddings, RoPE, QK-norm, RMSNorm without
 learnable scale, squared-ReLU MLP, tied input/output embeddings, bf16 autocast, `torch.compile`.
 
 **Optimizer:** AdamW with two parameter groups. The (tied) embedding/LM-head gets
