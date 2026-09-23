@@ -205,7 +205,7 @@ try:
 
         # --------------- EVALUATION -----------------
         val_loss = None
-        if last_step or (args.val_loss_every > 0 and step % args.val_loss_every == 0):
+        if last_step or (args.val_loss_every > 0 and step > 0 and step % args.val_loss_every == 0):
             model.eval()
             val_loader.reset()
             val_loss = torch.zeros((), device=device)
