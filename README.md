@@ -134,6 +134,4 @@ The default config gives `5100 * 512 * 1024 ≈ 2.67B` tokens.
 ## Data source
 
 Training data comes from [`kjj0/fineweb100B-gpt2`](https://huggingface.co/datasets/kjj0/fineweb100B-gpt2),
-a GPT-2-tokenized version of FineWeb. The model structure follows the
-[modded-nanogpt](https://github.com/KellerJordan/modded-nanogpt) / [llm.c](https://github.com/karpathy/llm.c)
-lineage.
+a GPT-2-tokenized version of FineWeb.
