@@ -45,8 +45,8 @@ def generate_grid_configs(reference_config:str, budget: int, lrs: list[float], b
             hyperparameters.project = f"experiment-budget{budget}"
             hyperparameters.run = f"adamw_lr{lr}_bs{batch_size}_it{int(num_iters)}"
             hyperparameters.num_iterations = int(num_iters)
-            hyperparameters.lr_embed = lr
-            hyperparameters.lr_matrix = lr
+            hyperparameters.lr = lr
+            hyperparameters.emb_lr_ratio = emb_lr_ratio
             hyperparameters.batch_size = batch_size
             hyperparameters.warmdown_iters = int(.28 * hyperparameters.num_iterations)
 
