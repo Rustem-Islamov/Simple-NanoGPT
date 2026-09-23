@@ -1,11 +1,11 @@
 # Simple-NanoGPT
 
-A minimal PyTorch setup for pretraining a NanoGPT-style model on
+A minimal PyTorch setup for pretraining a ~124M-parameter GPT-style model on
 [FineWeb](https://huggingface.co/datasets/kjj0/fineweb100B-gpt2) with **AdamW**.
 It is intended for hyperparameter studies (learning rate, batch size, weight decay,
 betas, token budget). Runs are tracked with [Weights & Biases](https://wandb.ai).
 
-**124M Model Configuration:** 12 layers, 6 heads, 768-dim embeddings, RoPE, QK-norm, RMSNorm without
+**Model:** 12 layers, 6 heads, 768-dim embeddings, RoPE, QK-norm, RMSNorm without
 learnable scale, squared-ReLU MLP, tied input/output embeddings, bf16 autocast, `torch.compile`.
 
 **Optimizer:** AdamW with two parameter groups. The (tied) embedding/LM-head gets
@@ -46,7 +46,7 @@ conda activate nanogpt
 # Example for CUDA 12.4:
 pip install torch --index-url https://download.pytorch.org/whl/cu124
 
-pip install numpy pyyaml tqdm wandb huggingface_hub
+pip install -r requirements.txt
 ```
 
 ## Weights & Biases
@@ -134,4 +134,6 @@ The default config gives `5100 * 512 * 1024 ≈ 2.67B` tokens.
 ## Data source
 
 Training data comes from [`kjj0/fineweb100B-gpt2`](https://huggingface.co/datasets/kjj0/fineweb100B-gpt2),
-a GPT-2-tokenized version of FineWeb.
+a GPT-2-tokenized version of FineWeb. The model structure follows the
+[modded-nanogpt](https://github.com/KellerJordan/modded-nanogpt) / [llm.c](https://github.com/karpathy/llm.c)
+lineage.

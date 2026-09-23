@@ -1,0 +1,10 @@
+# NOTE: install a CUDA-enabled PyTorch build first, matching your CUDA version
+# (https://pytorch.org/get-started/locally/), e.g.:
+#   pip install torch --index-url https://download.pytorch.org/whl/cu124
+# Then run: pip install -r requirements.txt
+torch>=2.4
+numpy
+pyyaml
+tqdm
+wandb
+huggingface_hub
