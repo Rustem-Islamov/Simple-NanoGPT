@@ -297,12 +297,8 @@ try:
     dist.destroy_process_group()
 
 except Exception as e:
-    # Optional: print rank-tagged error then re-raise
     print(f"[rank {ddp_rank}] Exception: {repr(e)}", flush=True)
     raise
-
-    try:
-        if dist.is_available() and dist.is_initialized():
-            dist.destroy_process_group()
-    finally:
-        pass
+finally:
+    if dist.is_available() and dist.is_initialized():
+        dist.destroy_process_group()
