@@ -1,6 +1,6 @@
 # Simple-NanoGPT
 
-A minimal PyTorch setup for pretraining a ~124M-parameter GPT-style model on
+A minimal PyTorch setup for pretraining a NanoGPT-style model on
 [FineWeb](https://huggingface.co/datasets/kjj0/fineweb100B-gpt2) with **AdamW**.
 It is intended for hyperparameter studies (learning rate, batch size, weight decay,
 betas, token budget). Runs are tracked with [Weights & Biases](https://wandb.ai).
