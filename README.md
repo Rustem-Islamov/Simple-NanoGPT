@@ -167,3 +167,15 @@ Training data comes from [`kjj0/fineweb100B-gpt2`](https://huggingface.co/datase
 a GPT-2-tokenized version of FineWeb. The model structure follows the
 [modded-nanogpt](https://github.com/KellerJordan/modded-nanogpt) / [llm.c](https://github.com/karpathy/llm.c)
 lineage.
+
+## Citation
+
+```bibtex
+@misc{islamov2026simplenanogpt,
+  author = {Islamov, Rustem},
+  title  = {Simple-NanoGPT},
+  year   = {2026},
+  url    = {https://github.com/Rustem-Islamov/Simple-NanoGPT},
+  note   = {GitHub repository}
+}
+```
