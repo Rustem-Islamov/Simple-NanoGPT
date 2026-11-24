@@ -1,24 +1,35 @@
 # Simple-NanoGPT
 
 A minimal PyTorch setup for pretraining a ~124M-parameter GPT-style model on
-[FineWeb](https://huggingface.co/datasets/kjj0/fineweb100B-gpt2) with **AdamW**.
-It is intended for hyperparameter studies (learning rate, batch size, weight decay,
-betas, token budget). Runs are tracked with [Weights & Biases](https://wandb.ai).
+[FineWeb](https://huggingface.co/datasets/kjj0/fineweb100B-gpt2) with **AdamW** or
+**Scion**. It is intended for hyperparameter studies (learning rate, batch size,
+weight decay, betas, token budget). Runs are tracked with [Weights & Biases](https://wandb.ai).
 
 **Model:** 12 layers, 6 heads, 768-dim embeddings, RoPE, QK-norm, RMSNorm without
 learnable scale, squared-ReLU MLP, tied input/output embeddings, bf16 autocast, `torch.compile`.
 
-**Optimizer:** AdamW with two parameter groups. The (tied) embedding/LM-head gets
+**AdamW optimizer:** two parameter groups. The (tied) embedding/LM-head gets
 `lr * emb_lr_ratio` and `weight_decay / emb_lr_ratio`, so the effective per-step decay is
 the same for both groups. The LR schedule is linear warmup, constant, then linear warmdown.
+
+**Scion optimizer** ([Pethick et al., 2025](https://arxiv.org/abs/2502.07529)): a
+norm-constrained, Frank-Wolfe-style optimizer. Two parameter groups: the hidden
+`transformer.h` layers use the `Spectral` norm (Newton-Schulz orthogonalization), and the
+(tied) embedding/LM-head uses the `Sign` norm; each group has its own `lr` and `scale`
+(the ball radius the update is constrained to). Uses the same warmup / constant /
+warmdown LR schedule as AdamW.
 
 ## Repository layout
 
 ```
 .
-├── train_gpt_adamw.py        # training script (DDP, gradient accumulation, W&B logging)
+├── train_gpt_adamw.py        # AdamW training script (DDP, gradient accumulation, W&B logging)
+├── train_gpt_scion.py        # Scion training script
+├── optimizers/
+│   └── scion.py              # Scion optimizer
 ├── configs/
-│   └── adamw.yaml            # default config
+│   ├── adamw.yaml            # default AdamW config
+│   └── scion.yaml            # default Scion config
 ├── data/
 │   └── cached_fineweb100B.py # downloads pre-tokenized FineWeb shards from Hugging Face
 └── utils/
@@ -54,8 +65,9 @@ pip install -r requirements.txt
 Logging goes through W&B, so set it up before training:
 
 1. Log in with `wandb login`.
-2. In `configs/adamw.yaml`, replace the placeholder `entity: "wandb_entity"` with your W&B
-   username or team. `project` and `run` can be changed as well.
+2. In `configs/adamw.yaml` (or `configs/scion.yaml`), replace the placeholder
+   `entity: "wandb_entity"` with your W&B username or team. `project` and `run` can be
+   changed as well.
 
 To run without an account, use `export WANDB_MODE=offline`.
 
@@ -79,12 +91,14 @@ Single GPU:
 
 ```bash
 torchrun --standalone --nproc_per_node=1 train_gpt_adamw.py --config=configs/adamw.yaml
+torchrun --standalone --nproc_per_node=1 train_gpt_scion.py --config=configs/scion.yaml
 ```
 
 Multiple GPUs on one node (e.g. 4):
 
 ```bash
 torchrun --standalone --nproc_per_node=4 train_gpt_adamw.py --config=configs/adamw.yaml
+torchrun --standalone --nproc_per_node=4 train_gpt_scion.py --config=configs/scion.yaml
 ```
 
 Constraints checked by the script:
@@ -103,7 +117,9 @@ job script writes Slurm output files to a subdirectory, create that directory be
 
 ## Configuration
 
-All settings live in the YAML file (`configs/adamw.yaml`).
+All settings live in the YAML file (`configs/adamw.yaml` or `configs/scion.yaml`).
+
+Shared keys:
 
 | Key | Meaning |
 |---|---|
@@ -116,11 +132,25 @@ All settings live in the YAML file (`configs/adamw.yaml`).
 | `warmup_iters`, `warmdown_iters` | Length of LR warmup and linear warmdown (in iterations) |
 | `val_loss_every`, `val_tokens` | Evaluation interval (iterations) and number of validation tokens |
 | `n_layer`, `n_head`, `n_embd` | Model size |
-| `lr` | Peak learning rate for non-embedding parameters |
-| `emb_lr_ratio` | Embedding/LM-head LR is `lr * emb_lr_ratio` |
-| `weight_decay` | Weight decay for non-embedding parameters (embeddings use `weight_decay / emb_lr_ratio`) |
-| `beta1`, `beta2` | AdamW betas |
+| `weight_decay` | Weight decay (see each optimizer's section below for how it's split across groups) |
 | `seed` | Base seed (rank is added per process) |
+
+AdamW-specific keys:
+
+| Key | Meaning |
+|---|---|
+| `lr` | Peak learning rate for non-embedding parameters |
+| `emb_lr_ratio` | Embedding/LM-head LR is `lr * emb_lr_ratio`; its weight decay is `weight_decay / emb_lr_ratio` |
+| `beta1`, `beta2` | AdamW betas |
+
+Scion-specific keys:
+
+| Key | Meaning |
+|---|---|
+| `lr_matrix`, `lr_embed` | Learning rate for the hidden (`Spectral` norm) and embedding/LM-head (`Sign` norm) groups |
+| `scale_matrix`, `scale_embed` | Norm-ball radius for the hidden and embedding/LM-head groups |
+| `momentum` | Dual-averaging weight in `m_{k+1} = (1 - momentum) * m_k + momentum * g_k` |
+| `unconstrained` | `false` (default): keep parameters inside the `scale`-ball. `true`: plain additive update |
 
 **Token budget:** `tokens = num_iterations * batch_size * sequence_length`.
 The default config gives `5100 * 512 * 1024 ≈ 2.67B` tokens.
